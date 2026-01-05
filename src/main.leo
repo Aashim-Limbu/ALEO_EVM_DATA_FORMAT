@@ -61,7 +61,7 @@ program sample_test.aleo {
         return hash_bytes;
     }
     function hash_field(field_value: field) -> [u8; 32] {
-        //! Attention to finding - Theseare the finding and for now the test is passing pretty well. 
+        //! Attention to finding - These are the finding and for now the test is passing pretty well.
         // BYTE ARRAY APPROACH (handles full 253-bit field range)
         // To match Solidity's keccak256(abi.encodePacked(uint256(x))), we need big-endian bytes
 
@@ -74,6 +74,38 @@ program sample_test.aleo {
             bits256[i] = field_bits[i];
         }
         // bits256[253-255] remain false (padding)
+
+        // Step 3: Deserialize to bytes (gives little-endian byte order)
+        let bytes_le: [u8; 32] = Deserialize::from_bits_raw::[[u8; 32]](bits256);
+
+        // Step 4: Reverse byte order to convert to big-endian
+        // Solidity uses big-endian: byte[0] = MSB, byte[31] = LSB
+        // Leo gives us little-endian: byte[0] = LSB, byte[31] = MSB
+        let bytes_be: [u8; 32] = [0u8; 32];
+        for i: u32 in 0u32..32u32 {
+            bytes_be[i] = bytes_le[31u32 - i];
+        }
+
+        // Step 5: Hash the big-endian byte array
+        let digest: [bool; 256] = Keccak256::hash_to_bits_raw(bytes_be);
+        let hash_bytes: [u8; 32] = Deserialize::from_bits_raw::[[u8; 32]](digest);
+
+        return hash_bytes;
+    }
+
+    function hash_u128(value: u128) -> [u8; 32] {
+        // To match Solidity's keccak256(abi.encodePacked(uint256(uint128(x)))), we need big-endian bytes
+        // u128 is padded to 32 bytes (256 bits) like hash_field
+
+        // Step 1: Get u128 as 128 bits (little-endian: bits[0] = LSB)
+        let u128_bits: [bool; 128] = Serialize::to_bits_raw(value);
+
+        // Step 2: Pad to 256 bits (little-endian style, padding at end)
+        let bits256: [bool; 256] = [false; 256];
+        for i: u32 in 0u32..128u32 {
+            bits256[i] = u128_bits[i];
+        }
+        // bits256[128-255] remain false (padding)
 
         // Step 3: Deserialize to bytes (gives little-endian byte order)
         let bytes_le: [u8; 32] = Deserialize::from_bits_raw::[[u8; 32]](bits256);

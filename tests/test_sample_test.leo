@@ -35,6 +35,7 @@ program test_sample_test.aleo {
     }
 
 
+    */
     @test
     script test_hash_number_solidity() {
     let expected: [u8; 32] = [
@@ -49,7 +50,6 @@ program test_sample_test.aleo {
         // Verify Leo hash is consistent with itself
         assert_eq(result, expected);
     }
-    */
 
     @test
     script test_hash_number_solidity_match() {
@@ -96,6 +96,25 @@ program test_sample_test.aleo {
         ];
 
         let result: [u8; 32] = sample_test.aleo/hash_field(4field);
+
+        // Verify Leo hash is consistent
+        assert_eq(result, expected);
+    }
+
+    @test
+    script test_hash_u128_solidity() {
+        let expected: [u8; 32] = [
+            231u8, 31u8, 172u8, 111u8,
+            183u8, 133u8, 148u8, 44u8,
+            198u8, 198u8, 64u8, 74u8,
+            66u8, 63u8, 148u8, 243u8,
+            42u8, 40u8, 174u8, 102u8,
+            214u8, 159u8, 244u8, 20u8,
+            148u8, 195u8, 139u8, 253u8,
+            71u8, 136u8, 178u8, 248u8
+        ];
+
+        let result: [u8; 32] = sample_test.aleo/hash_u128(200u128);
 
         // Verify Leo hash is consistent
         assert_eq(result, expected);

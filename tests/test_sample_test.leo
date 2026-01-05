@@ -88,16 +88,14 @@ program test_sample_test.aleo {
 
   @test
     script test_hash_field_solidity() {
-        // Test Leo's actual hash output
-        // Leo hash for 1u128: different from Solidity due to encoding differences
-        let expected: [u8; 32] = [
+    let expected: [u8; 32] = [
         138u8, 53u8, 172u8, 251u8, 193u8, 95u8, 248u8, 26u8,
         57u8, 174u8, 125u8, 52u8, 79u8, 215u8, 9u8, 242u8,
         142u8, 134u8, 0u8, 180u8, 170u8, 140u8, 101u8, 198u8,
         182u8, 75u8, 254u8, 127u8, 227u8, 107u8, 209u8, 155u8
         ];
 
-        let result: [u8; 32] = sample_test.aleo/hash_number_u8(1field);
+        let result: [u8; 32] = sample_test.aleo/hash_field(4field);
 
         // Verify Leo hash is consistent
         assert_eq(result, expected);

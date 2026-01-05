@@ -60,23 +60,36 @@ program sample_test.aleo {
         let hash_bytes: [u8;32] = Deserialize::from_bits_raw::[[u8;32]](digest);
         return hash_bytes;
     }
-    function hash_field(field_value:field) -> [u8;32]{
-        let field_bits: [bool ; 253] = Serialize::to_bits_raw(field_value);
-        let bits256 : [bool;256] = [false;256];
-        for i: u32 in 0u32..253u32{
-            // little endian expansion. value is preserved 2^0 =>> [1,0] -> [1,0,0,0] =>> 2^0 [index 0 = LSB]
+    function hash_field(field_value: field) -> [u8; 32] {
+        //! Attention to finding - Theseare the finding and for now the test is passing pretty well. 
+        // BYTE ARRAY APPROACH (handles full 253-bit field range)
+        // To match Solidity's keccak256(abi.encodePacked(uint256(x))), we need big-endian bytes
+
+        // Step 1: Get field as 253 bits (little-endian: field_bits[0] = LSB)
+        let field_bits: [bool; 253] = Serialize::to_bits_raw(field_value);
+
+        // Step 2: Pad to 256 bits (little-endian style, padding at end)
+        let bits256: [bool; 256] = [false; 256];
+        for i: u32 in 0u32..253u32 {
             bits256[i] = field_bits[i];
         }
-        // on conversion thie the bits256 are operated as big-Endian encoding.
-        let digest: [bool; 256] = Keccak256::hash_to_bits_raw(bits256);
-        let hash_bytes: [u8;32] = Deserialize::from_bits_raw::[[u8;32]](digest);
+        // bits256[253-255] remain false (padding)
+
+        // Step 3: Deserialize to bytes (gives little-endian byte order)
+        let bytes_le: [u8; 32] = Deserialize::from_bits_raw::[[u8; 32]](bits256);
+
+        // Step 4: Reverse byte order to convert to big-endian
+        // Solidity uses big-endian: byte[0] = MSB, byte[31] = LSB
+        // Leo gives us little-endian: byte[0] = LSB, byte[31] = MSB
+        let bytes_be: [u8; 32] = [0u8; 32];
+        for i: u32 in 0u32..32u32 {
+            bytes_be[i] = bytes_le[31u32 - i];
+        }
+
+        // Step 5: Hash the big-endian byte array
+        let digest: [bool; 256] = Keccak256::hash_to_bits_raw(bytes_be);
+        let hash_bytes: [u8; 32] = Deserialize::from_bits_raw::[[u8; 32]](digest);
+
         return hash_bytes;
     }
-    // function convertTo256bits(bits: [bool;253]) -> [bool;256]{
-    //     let bits256 : [bool;256] = [false;256];
-    //     for i: u32 in 0u32..253u32{
-    //         bits256[3+i] = bits[i];
-    //     }
-    //     return bits256;
-    // }
   }
